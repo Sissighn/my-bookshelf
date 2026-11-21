@@ -1,133 +1,197 @@
 # My Bookshelf
 
-A virtual bookshelf for your Goodreads library. Your books stand as spines on a
-shelf, in the colours of their real covers — searchable, filterable by shelf,
-and clickable for details.
+[![Live app](https://img.shields.io/badge/Live%20app-My%20Bookshelf-765442?style=flat-square)](https://my-bookshelf-bxk.pages.dev/)
+[![iPhone web app](https://img.shields.io/badge/iPhone-Web%20app-5A4A78?style=flat-square&logo=pwa&logoColor=white)](#install-on-an-iphone)
+[![Goodreads CSV import](https://img.shields.io/badge/Goodreads-CSV%20import-795548?style=flat-square&logo=goodreads&logoColor=white)](#import-an-existing-goodreads-library)
+[![Open Library covers](https://img.shields.io/badge/Covers-Open%20Library-6B5545?style=flat-square)](https://openlibrary.org/dev/docs/api/covers)
 
-Everything runs in the browser. There is no backend, no account, and your export
-never leaves your machine.
+[![React 19](https://img.shields.io/badge/React-19-087EA4?style=flat-square&logo=react&logoColor=white)](https://react.dev/)
+[![Vite 8](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vite.dev/)
+[![Tailwind CSS 4](https://img.shields.io/badge/Tailwind%20CSS-4-0E7490?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Node.js 22.12+](https://img.shields.io/badge/Node.js-22.12%2B-417E38?style=flat-square&logo=nodedotjs&logoColor=white)](#run-locally)
+[![Supabase auth and storage](https://img.shields.io/badge/Supabase-Auth%20%26%20storage-227953?style=flat-square&logo=supabase&logoColor=white)](#enable-accounts)
+[![Cloudflare Pages deployment](https://img.shields.io/badge/Cloudflare-Pages-A44C16?style=flat-square&logo=cloudflare&logoColor=white)](#deploy-or-update-the-web-app)
 
-## Setup
+A personal bookshelf for physical books and ebooks. Open any book to see a 3D
+preview with a hinged cover, spine and page block. Search by title or author,
+or filter by reading status and shelves.
+
+## Run locally
+
+Use Node.js 22.12 or newer, then run these commands from the project folder.
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Then open the URL Vite prints (usually http://localhost:5173).
+Open the URL Vite prints. The default is `http://localhost:5173/`. If that port
+is busy, use the actual URL shown in the terminal. Local development starts
+without sign-in when both Supabase variables are unset. With the variables
+configured, the same development server opens the sign-in screen.
 
 ```bash
-npm run build     # production build into dist/
-npm run preview   # serve the production build
-npm run lint      # oxlint
+npm run lint
+npm run build
+npm run preview
 ```
 
-## Getting your Goodreads CSV
+## Manage your bookshelf
 
-Goodreads shut its public API down in December 2020 — no new keys are issued and
-there is no live sync. A CSV export is the only way to get your library out, so
-that is what this app reads.
+- **Add book** creates an entry directly. Click a book, then **Edit book**, to
+  update its details, shelves, rating or notes, or remove it.
+- **Arrange shelf** shows the complete library. Drag a book to either side of
+  another book. On a touch screen, tap a book and use the arrow buttons. The
+  order is saved automatically. Books wrap into vertically scrollable rows
+  on both phones and desktop.
+- **Deco** opens the decoration tray. Browse all pieces or filter by lamps,
+  candles, figurines, or objects. Drag a decoration beside
+  a book with the mouse or by touch. You can also choose a decoration, then tap
+  a shelf item to place it before that item, or choose **Place at end**. Use **Upload deco**
+  to place a transparent PNG or WebP of your own. Select a placed decoration
+  to move or remove it. Decorations appear in the full shelf view and their
+  placements and uploaded images are included in backups and account sync.
+- **Find cover** searches Open Library by title and author. **Upload cover**
+  takes priority over automatic ISBN matching and saves your image with the
+  book. The app resizes uploaded images to 640 pixels on the longest side
+  when needed.
+- **Download backup** exports your books, their order, selected cover references,
+  and uploaded images to JSON. Open **Import CSV or backup** to restore a backup
+  in another browser or account. A backup replaces the current shelf. The app
+  asks for confirmation when the current shelf contains books.
+- On a phone, open **More** to reach import and backup actions.
+- **Dark mode** follows the device appearance until you choose a setting. Each
+  browser or installed web app stores its own choice.
 
-1. Go to [goodreads.com/review/import](https://www.goodreads.com/review/import)
-   (or **My Books → Tools → Import/Export** in the left sidebar).
-2. Click **Export Library**.
-3. Wait a moment — a link like `goodreads_library_export.csv` appears at the top
-   of the page. Download it.
-4. In the app, click **Import Goodreads CSV**, or just drag the file anywhere
-   onto the page.
+### Where your shelf is saved
 
-Until you import something, the shelf shows a small sample library so there is
-something to look at.
+In local development without an account, the shelf lives in the current
+browser's IndexedDB. Earlier localStorage imports are migrated automatically.
+The browser profile, address, and port determine which local shelf you see.
+To move it into an account, download a backup while using the local shelf,
+then sign in and import that backup.
 
-### Columns it reads
+With an account, your books, order, ratings, notes, and uploaded covers are
+saved in Supabase. Sign in with the same account on both devices and use builds
+configured for the same Supabase project. Reload a shelf that is already open
+on the other device to fetch the latest saved version. If the app reports a
+concurrent edit, download a backup of your current changes before reloading.
+An Open Library cover picked from search is backed up as a reference and is
+still fetched from Open Library.
 
-`Title`, `Author`, `ISBN`, `ISBN13`, `My Rating`, `Average Rating`,
-`Exclusive Shelf`, `Bookshelves`, `Number of Pages`, `Binding`,
-`Original Publication Year` / `Year Published`, `Date Read`.
+## Import an existing Goodreads library
 
-Goodreads writes ISBNs as spreadsheet escapes (`="0439023483"`); the parser
-unwraps them. Rows without a title are skipped, and a file with no `Title`
-column is rejected with a message rather than a blank shelf.
+Open [Goodreads Import/Export](https://www.goodreads.com/review/import) and
+click **Export Library**. Download the CSV, then choose **Import CSV or backup**
+in My Bookshelf, or drag the file onto the page.
 
-## How it works
+Keep the `Book Id` column from the Goodreads export so the app can identify
+books across imports. Each CSV import appends only books with new IDs.
+Existing books keep their order, metadata, notes and covers. Update existing
+entries with **Edit book**. Books you remove from My Bookshelf stay removed
+when you import another CSV. A JSON backup also records those removals.
 
-**Covers** come from the [Open Library Covers API](https://openlibrary.org/dev/docs/api/covers)
-by ISBN — no key required:
+## Enable accounts
 
-```
-https://covers.openlibrary.org/b/isbn/{ISBN}-M.jpg
-```
+1. Enable the Data API for your Supabase project. In the SQL editor, apply
+   [the private bookshelf migration](supabase/migrations/202611210001_private_bookshelves.sql).
+   Run it once for each new Supabase project. It restricts shelf access to
+   its owner and requires two-step verification for accounts with an enrolled,
+   verified authenticator.
+2. Copy [`.env.example`](.env.example) to `.env.local` in the project root.
+   In the Supabase dashboard use **Connect** to get the project URL and the
+   browser-safe key starting with `sb_publishable_`. Set the two variable
+   names below even if Supabase shows `NEXT_PUBLIC_` names. Restart Vite
+   after editing the file. Keep service keys and provider secrets in their
+   server-side settings.
 
-Open Library redirects these into an archive.org zip, so a cover that nobody has
-requested recently can take ten seconds to arrive, and asking for a hundred at
-once gets connections reset. Two things follow from that:
+   ```dotenv
+   VITE_SUPABASE_URL=https://your-project.supabase.co
+   VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_example
+   ```
 
-- Requests go through a small queue (`src/lib/coverQueue.js`) that keeps a dozen
-  in flight at a time. A large library fills in progressively rather than all at
-  once, and it is fast on later visits once the browser has cached them.
-- A spine never waits on its cover. It draws immediately in a colour derived
-  from its title, and the artwork cross-fades over it if and when it loads.
+3. In **Authentication → URL Configuration**, set **Site URL** to the main app
+   address. Use the URL printed by Vite for local-only testing. For a hosted
+   app, use its HTTPS address. Add each app address to the
+   [Redirect URLs list](https://supabase.com/docs/guides/auth/redirect-urls),
+   including the local port and trailing slash where applicable.
+4. [Set up Google sign-in](https://supabase.com/docs/guides/auth/social-sign-in/auth-google).
+   Create an OAuth web client in Google Auth Platform. Add each app origin
+   under **Authorized JavaScript origins**, with no path or trailing slash.
+   Under **Authorized redirect URIs**, use the Supabase Google provider's
+   callback URL ending in `/auth/v1/callback`. Set the client ID and secret
+   under **Authentication → Sign In / Providers → Google** in Supabase, enable
+   Google, and save. Add your Google account under **Audience → Test users**
+   if your Google app is in testing.
+5. In the Supabase email provider, enable email/password signup and **Confirm
+   email**. Set the server-side password minimum to at least 12 characters.
+   Keep server-side rate limits enabled, review the email and verification
+   limits for your audience, and enable leaked-password checks if supported by
+   your plan. Set up custom SMTP for production and enable password-change
+   security notifications. [Password settings](https://supabase.com/docs/guides/auth/password-security)
+6. Edit the Supabase [email templates](https://supabase.com/docs/guides/auth/auth-email-templates)
+   to use these links. Disable email click tracking so the links remain intact.
 
-**Spines carry no lettering.** A cover-backed spine is a sharp, unfiltered crop
-of the artwork and nothing else; the title lives in the hover card and the
-detail overlay. That is what lets the crop stay unblurred — with no stamped
-title of our own, the cover's own typography has nothing to collide with. The
-button keeps an `aria-label`, so a screen reader still gets the title.
+   **Confirm sign up**
 
-**Spines without a cover** are the exception, and they *do* carry their title —
-otherwise they would be blank coloured rectangles with nothing to tell them
-apart. They are drawn instead: a cloth colour, a lit head and tail, the title
-stamped vertically. Colour, width and height all come from a hash of the title,
-so they are random-looking but identical on every reload. Width also follows the
-real page count when the export has one, so a 700-page novel is visibly fatter
-than a novella.
+   ```html
+   <a href="{{ .RedirectTo }}?auth_action=confirm#token_hash={{ .TokenHash }}">Confirm email</a>
+   ```
 
-**The only overlay** on a cover is a pair of dark seams down the left and right
-edges, reading as the curve where one spine meets the next. The middle is left
-completely alone.
+   **Reset password**
 
-**Shelf rows** are pure CSS. Every spine sits bottom-aligned in a fixed-height
-band, and one repeating gradient paints a plank under each wrapped row — so
-nothing has to measure the container or chunk books into rows in JavaScript.
+   ```html
+   <a href="{{ .RedirectTo }}?auth_action=recover#token_hash={{ .TokenHash }}">Reset password</a>
+   ```
 
-## Storage
+7. To enable bot protection, put the public Turnstile site key in
+   `VITE_TURNSTILE_SITE_KEY` and configure its secret and CAPTCHA enforcement
+   in [Supabase Auth](https://supabase.com/docs/guides/auth/auth-captcha).
+   Enable authenticator app (TOTP) enrollment and verification in the project
+   for the **Security** menu. Keep a second registered authenticator if you need
+   a backup factor.
 
-The last import is kept in `localStorage` so a reload does not send you back to
-the sample shelf. **Clear** next to the import button forgets it. If the export
-is too large for the quota the shelf still works for that session, it just will
-not survive a reload.
+## Deploy or update the web app
 
-## Project layout
+1. For a personal deployment, confirm that your own account can sign in and
+   turn off **Allow new users to sign up** in Supabase Auth. The sign-in page
+   remains reachable at its public URL. Existing accounts can still sign in
+   and the database restricts each shelf to its owner.
+2. Run `npm run build` with your Supabase settings configured. Upload the
+   generated `dist/` folder using [Cloudflare Pages Direct Upload](https://developers.cloudflare.com/pages/get-started/direct-upload/).
+   For an update, open the project whose `.pages.dev` address matches the
+   installed app, then choose **Create a new deployment → Production** and
+   upload the rebuilt `dist/`. The build contains the public frontend. Keep
+   `.env.local`, project source, and personal backups outside the upload.
+3. Add the exact hosted URL, including the final slash, to **Redirect URLs** in
+   Supabase. Set it as your **Site URL** if it is the main deployment. Keep
+   localhost in the allowed list if you still use the development app. For the
+   Google OAuth web client, add the HTTPS origin to **Authorized JavaScript
+   origins**. Its authorized redirect URI remains the Supabase callback URL.
 
-```
-src/
-  App.jsx                  state, filtering, file + drag-and-drop import
-  components/
-    Header.jsx             title, volume count, import controls
-    SearchBar.jsx          title/author search
-    FilterChips.jsx        All + exclusive shelves + your own shelves
-    Shelf.jsx              wrapping rows and the CSS shelf boards
-    BookSpine.jsx          one spine: cover, fallback, hover card
-    BookDetail.jsx         the detail overlay
-    Stars.jsx              rating stars
-  lib/
-    goodreads.js           CSV parsing, normalizing, filters
-    spine.js               deterministic colour and size, cover URLs
-    coverQueue.js          concurrency gate for cover requests
-    storage.js             localStorage
-  data/sampleBooks.js      the shelf you see before importing
-```
+Serve the production build over HTTPS. The build includes a Content Security
+Policy and [Cloudflare response headers](public/_headers). If you use a host
+that ignores `_headers`, configure its response headers directly. A
+production build with missing account configuration displays a setup screen.
 
-## Notes
+## Install on an iPhone
 
-- Filter chips are built from your own `Bookshelves` values, sorted by how many
-  books each holds, after the three shelves Goodreads guarantees
-  (currently-reading, read, to-read).
-- On phones the shelf scrolls sideways and the hover cards are suppressed —
-  tapping a spine opens the full detail overlay instead.
-- The overlay closes on **Esc**, on a backdrop click, or via the close button.
-- `prefers-reduced-motion` disables the lifts and cross-fades.
+Open the hosted address in Safari. Choose **Share → Add to Home Screen**, leave
+**Open as Web App** enabled if shown, and tap **Add**. Open the icon and sign in
+with the account you use on your Mac. [Apple's iPhone guide](https://support.apple.com/guide/iphone/open-as-web-app-iphea86e5236/27/ios/27)
 
-## Tech
+Regular browser sessions are scoped to a tab. The installed web app remembers
+its session when reopened with a build that supports persistent sessions.
+Use **Sign out** in that app to clear its saved sign-in. When updating from an
+older build, close and reopen the installed app after deploying the update,
+then sign in once if prompted.
 
-Vite · React · Tailwind CSS v4 · PapaParse
+## Troubleshooting
+
+| What you see | What to check |
+| --- | --- |
+| The local app opens without a sign-in screen | Verify the two `VITE_SUPABASE_` variable names in `.env.local`, then restart Vite and open the URL it prints. |
+| `Unsupported provider: provider is not enabled` | Enable **Google** in the Supabase project's **Sign In / Providers** and save its OAuth credentials. |
+| Google returns to the wrong address | Compare the actual app URL against **Redirect URLs** in Supabase, including the port and trailing slash. In Google Cloud, the redirect URI is the Supabase callback. |
+| `Could not load your account’s bookshelf` | Confirm the signed-in app is connected to the Supabase project where the private bookshelf migration ran, then click **Retry**. If the SQL editor reports `relation "bookshelves" already exists`, check the existing table and policies before running another migration. |
+| Changes from another device are missing | Verify both devices use the same account and Supabase project. Reload after the changes have saved. |
