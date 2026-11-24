@@ -3,7 +3,22 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-function securityPolicy(env) {
+function desktopStyles() {
+  return {
+    name: 'bookshelf-desktop-fonts',
+    transformIndexHtml: {
+      order: 'pre',
+      handler(html) {
+        return {
+          html: html.replace(/<link\b[^>]*https:\/\/fonts\.(?:googleapis|gstatic)\.com[^>]*>\s*/g, ''),
+          tags: [{ tag: 'link', attrs: { rel: 'stylesheet', href: '/src/desktop-fonts.css' } }],
+        }
+      },
+    },
+  }
+}
+
+function securityPolicy(env, desktop) {
   return {
     name: 'bookshelf-content-security-policy',
     apply: 'build',
@@ -18,8 +33,8 @@ function securityPolicy(env) {
       const policy = [
         "default-src 'self'",
         `script-src 'self'${themeHash}${captcha}`,
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-        "font-src 'self' https://fonts.gstatic.com",
+        `style-src 'self' 'unsafe-inline'${desktop ? '' : ' https://fonts.googleapis.com'}`,
+        `font-src 'self'${desktop ? '' : ' https://fonts.gstatic.com'}`,
         "img-src 'self' data: blob: https://covers.openlibrary.org https://archive.org https://*.archive.org",
         `connect-src 'self' https://openlibrary.org${authOrigin}`,
         `frame-src${captcha || " 'none'"}`,
@@ -41,5 +56,6 @@ export default defineConfig(({ mode }) => {
   if (exposesSecret || (key && !key.startsWith('sb_publishable_'))) {
     throw new Error('Only public credentials can be configured in VITE_ variables. Use a Supabase publishable key.')
   }
-  return { plugins: [react(), tailwindcss(), securityPolicy(env)] }
+  const desktop = mode === 'mac'
+  return { plugins: [react(), tailwindcss(), desktop && desktopStyles(), securityPolicy(env, desktop)] }
 })
