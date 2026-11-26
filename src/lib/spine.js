@@ -48,11 +48,6 @@ export function spineSize(book) {
   }
 }
 
-export function coverUrl(isbn, size = 'L') {
-  if (!isbn) return null
-  return `https://covers.openlibrary.org/b/isbn/${isbn}-${size}.jpg?default=false`
-}
-
 export function truncate(text, max) {
   return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`
 }
