@@ -1,0 +1,8 @@
+@import '@fontsource-variable/cormorant-garamond';
+@import '@fontsource-variable/cormorant-garamond/wght-italic.css';
+@import '@fontsource-variable/jetbrains-mono';
+
+:root, :host {
+  --font-serif: 'Cormorant Garamond Variable', ui-serif, Georgia, serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+}
