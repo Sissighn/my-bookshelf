@@ -1,6 +1,7 @@
 # My Bookshelf
 
 [![Live app](https://img.shields.io/badge/Live%20app-My%20Bookshelf-765442?style=flat-square)](https://my-bookshelf-bxk.pages.dev/)
+[![Mac app](https://img.shields.io/badge/Mac-Desktop%20app-5A4A78?style=flat-square&logo=apple&logoColor=white)](#use-the-mac-app)
 [![iPhone web app](https://img.shields.io/badge/iPhone-Web%20app-5A4A78?style=flat-square&logo=pwa&logoColor=white)](#install-on-an-iphone)
 [![Goodreads CSV import](https://img.shields.io/badge/Goodreads-CSV%20import-795548?style=flat-square&logo=goodreads&logoColor=white)](#import-an-existing-goodreads-library)
 [![Open Library covers](https://img.shields.io/badge/Covers-Open%20Library-6B5545?style=flat-square)](https://openlibrary.org/dev/docs/api/covers)
@@ -36,10 +37,34 @@ npm run build
 npm run preview
 ```
 
+## Run the tests
+
+```bash
+npm ci
+npx playwright install chromium webkit
+npm test
+```
+
+`npm test` runs Vitest and the Playwright desktop, iPhone WebKit and account
+projects. The migration tests run the actual SQL in local PostgreSQL with test
+users. The browser tests simulate Supabase, Google and Open Library responses.
+They use disposable shelves and accounts. On Linux, use `npx playwright install
+--with-deps chromium webkit` to install the browser system dependencies as well.
+
+| Command | Covers |
+| --- | --- |
+| `npm run test:unit` | Goodreads, backups and ordering, IndexedDB, covers, account storage and authentication, SQL policies, the Mac callback and the web build. |
+| `npm run test:e2e` | Browser workflows, including book editing, desktop and touch placement, cover display, account recovery and two-factor authentication. |
+| `npm run test:coverage` | Unit coverage for `src/lib` and the Mac callback. The report opens from `coverage/index.html`. |
+| `npm run test:mac` | Builds a signed macOS test app in a temporary folder and checks startup, offline assets, the Google callback and persistence across restarts. Run on macOS. |
+
 ## Manage your bookshelf
 
 - **Add book** creates an entry directly. Click a book, then **Edit book**, to
   update its details, shelves, rating or notes, or remove it.
+- Open a book and choose **Show cover on shelf** to display the full front
+  cover in its current spot. Choose **Show spine on shelf** to turn it back.
+  The selection is saved per book and included in account sync and backups.
 - **Arrange shelf** shows the complete library. Drag a book to either side of
   another book. On a touch screen, tap a book and use the arrow buttons. The
   order is saved automatically. Books wrap into vertically scrollable rows
@@ -173,6 +198,28 @@ Serve the production build over HTTPS. The build includes a Content Security
 Policy and [Cloudflare response headers](public/_headers). If you use a host
 that ignores `_headers`, configure its response headers directly. A
 production build with missing account configuration displays a setup screen.
+
+## Use the Mac app
+
+On a Mac, run `npm ci` and `npm run build:mac`. Open **My Bookshelf.app** in
+`release/mac/My Bookshelf-darwin-arm64/` on Apple silicon or
+`release/mac/My Bookshelf-darwin-x64/` on Intel. You can move the app into
+your Applications folder. The build is signed locally for personal use.
+
+The Mac app starts with a local shelf and bundles the interface, fonts and
+decorations. Use **Import CSV or backup** to bring a Goodreads export or a
+bookshelf backup into the Mac app. Local books and decorations stay on the
+Mac. Cover lookup and artwork hosted by Open Library still use the internet.
+
+If your build has the Supabase settings from [Enable accounts](#enable-accounts),
+choose **Sign in to sync** and use your existing account to open your synced
+shelf. The local shelf and the synced shelf have separate storage. The Mac
+stores the sign-in session using encryption backed by the macOS Keychain.
+
+**Continue with Google** opens your default browser. The Mac app receives the
+sign-in callback on a temporary address on `127.0.0.1` and exchanges the
+one-time code with Supabase. Account confirmation and password-reset emails use
+the Supabase **Site URL**.
 
 ## Install on an iPhone
 
